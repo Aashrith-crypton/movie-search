@@ -1,1237 +1,256 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
+<!DOCTYPE html><html lang="en"><head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- TODO: Set the document title to the name of your application -->
     <title>Movie Search App</title>
-    <style>
-        /* --- STYLES --- */
-        :root {
-            --bg-primary: #0b1220;
-            --bg-secondary: #0f1724;
-            --bg-tertiary: #071226;
-            --bg-quaternary: #162032;
-            --text-primary: #e6eef8;
-            --text-secondary: #9aa7b2;
-            --text-tertiary: #cbd5e1;
-            --border-primary: #1f2937;
-            --border-secondary: #213042;
-            --border-tertiary: #2d3748;
-            --accent-blue: #60a5fa;
-            --accent-yellow: #f59e0b;
-            --accent-red: #dc2626;
-            --accent-green: #10b981;
-        }
-
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-        }
-
-        body {
-            min-height: 100vh;
-            background: var(--bg-primary);
-            color: var(--text-primary);
-            font-family: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial;
-            padding: 20px;
-        }
-
-        .container {
-            max-width: 900px;
-            margin: 0 auto;
-        }
-
-        .header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 18px;
-        }
-
-        .tabs {
-            display: flex;
-            gap: 8px;
-            margin-bottom: 16px;
-            border-bottom: 1px solid var(--border-primary);
-            padding-bottom: 8px;
-        }
-
-        .tab {
-            padding: 8px 16px;
-            background: transparent;
-            border: none;
-            color: var(--text-secondary);
-            cursor: pointer;
-            border-radius: 6px;
-            transition: all 0.2s;
-        }
-
-        .tab.active {
-            background: var(--bg-quaternary);
-            color: var(--text-primary);
-        }
-
-        .card {
-            background: var(--bg-secondary);
-            padding: 16px;
-            border-radius: 10px;
-            border: 1px solid var(--border-primary);
-        }
-
-        .input {
-            flex: 1;
-            padding: 10px;
-            border-radius: 6px;
-            background: #05060a;
-            border: 1px solid #263238;
-            color: var(--text-primary);
-        }
-
-        .button {
-            padding: 8px 12px;
-            border-radius: 6px;
-            background: #374151;
-            color: #fff;
-            border: none;
-            cursor: pointer;
-            transition: background 0.2s;
-        }
-
-        .button:hover {
-            background: #4b5563;
-        }
-
-        .list {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 12px;
-            margin-top: 14px;
-        }
-
-        .item {
-            display: flex;
-            gap: 12px;
-            background: var(--bg-tertiary);
-            padding: 12px;
-            border-radius: 8px;
-            align-items: center;
-            border: 1px solid var(--border-secondary);
-            transition: transform 0.2s;
-        }
-
-        .item:hover {
-            transform: translateY(-2px);
-            border-color: var(--accent-blue);
-        }
-
-        .poster {
-            width: 80px;
-            height: 120px;
-            object-fit: cover;
-            border-radius: 4px;
-            cursor: pointer;
-        }
-
-        .small {
-            font-size: 13px;
-            color: var(--text-secondary);
-        }
-
-        .footer {
-            margin-top: 16px;
-            font-size: 12px;
-            color: var(--text-secondary);
-        }
-
-        /* Modal Overlay & Container */
-        .modal-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background-color: rgba(0, 0, 0, 0.9);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 1000;
-            padding: 20px;
-            backdrop-filter: blur(5px);
-        }
-
-        .modal {
-            background: var(--bg-secondary);
-            border-radius: 12px;
-            border: 1px solid var(--border-tertiary);
-            max-width: 800px;
-            width: 100%;
-            max-height: 90vh;
-            overflow: hidden;
-            display: flex;
-            flex-direction: column;
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
-        }
-
-        .modal-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 16px;
-            border-bottom: 1px solid var(--border-primary);
-            background: var(--bg-quaternary);
-        }
-
-        .modal-title {
-            margin: 0;
-            font-size: 18px;
-            font-weight: bold;
-            color: #fff;
-        }
-
-        .close-button {
-            background: #374151;
-            border: none;
-            color: #fff;
-            cursor: pointer;
-            width: 30px;
-            height: 30px;
-            border-radius: 15px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 20px;
-            line-height: 1;
-            transition: background 0.2s;
-        }
-
-        .close-button:hover {
-            background: #4b5563;
-        }
-
-        .modal-body {
-            padding: 24px;
-            overflow-y: auto;
-            flex: 1;
-        }
-
-        /* Movie Details Inside Modal */
-        .movie-header {
-            display: flex;
-            gap: 24px;
-            margin-bottom: 24px;
-            flex-wrap: wrap;
-        }
-
-        .detail-poster {
-            width: 200px;
-            height: 300px;
-            object-fit: cover;
-            border-radius: 8px;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
-        }
-
-        .movie-basic-info {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-            min-width: 250px;
-        }
-
-        .meta-info {
-            display: flex;
-            gap: 8px;
-            flex-wrap: wrap;
-        }
-
-        .meta-item {
-            background: #1f2937;
-            border: 1px solid #374151;
-            color: var(--text-tertiary);
-            padding: 4px 8px;
-            border-radius: 4px;
-            font-size: 12px;
-        }
-
-        .rating-badge {
-            background: var(--accent-yellow);
-            color: #000;
-            padding: 6px 10px;
-            border-radius: 4px;
-            font-weight: bold;
-            font-size: 14px;
-            display: inline-block;
-            align-self: flex-start;
-        }
-
-        .quick-stats {
-            display: flex;
-            flex-direction: column;
-            gap: 6px;
-            margin-top: 8px;
-        }
-
-        .stat-item {
-            font-size: 14px;
-            color: #94a3b8;
-        }
-
-        .strong {
-            color: #e2e8f0;
-            margin-right: 6px;
-        }
-
-        /* Sections */
-        .section {
-            margin-bottom: 24px;
-        }
-
-        .section-title {
-            margin: 0 0 12px 0;
-            color: #fff;
-            font-size: 18px;
-            font-weight: 600;
-            border-bottom: 1px solid #374151;
-            padding-bottom: 8px;
-        }
-
-        .detail-text {
-            color: var(--text-tertiary);
-            line-height: 1.6;
-            font-size: 15px;
-        }
-
-        /* Trailer Section */
-        .trailer-section {
-            text-align: center;
-            padding: 20px;
-            background: var(--bg-quaternary);
-            border-radius: 8px;
-            border: 1px solid var(--border-tertiary);
-        }
-
-        .youtube-container {
-            width: 100%;
-            height: 400px;
-            background: #000;
-            border-radius: 8px;
-            overflow: hidden;
-            margin-bottom: 15px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            position: relative;
-        }
-
-        .fallback-button {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-            margin-top: 10px;
-            padding: 10px 20px;
-            background-color: #c4302b;
-            color: white;
-            text-decoration: none;
-            border-radius: 6px;
-            font-weight: bold;
-            font-size: 14px;
-            transition: background 0.2s;
-            width: 100%;
-        }
-        
-        .fallback-button:hover {
-            background-color: #e62117;
-        }
-
-        /* Ratings Grid */
-        .ratings-section {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-            gap: 12px;
-        }
-
-        .rating-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            background: var(--bg-quaternary);
-            padding: 12px;
-            border-radius: 6px;
-            border: 1px solid var(--border-tertiary);
-        }
-
-        .rating-source {
-            font-weight: 500;
-            color: #94a3b8;
-            font-size: 13px;
-        }
-
-        .rating-value {
-            color: var(--accent-yellow);
-            font-weight: bold;
-        }
-
-        /* Extra Grid */
-        .details-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 16px;
-        }
-
-        .detail-grid-item {
-            background: var(--bg-quaternary);
-            padding: 12px;
-            border-radius: 6px;
-            font-size: 14px;
-        }
-
-        /* States */
-        .loading-text {
-            text-align: center;
-            color: var(--text-secondary);
-            padding: 40px;
-            font-size: 16px;
-        }
-
-        .error-text {
-            color: #fca5a5;
-            text-align: center;
-            padding: 20px;
-            background: #451a1a;
-            border-radius: 6px;
-            font-size: 14px;
-        }
-
-        .empty-state {
-            text-align: center;
-            padding: 40px;
-            color: var(--text-secondary);
-        }
-
-        .empty-state-icon {
-            font-size: 48px;
-            margin-bottom: 16px;
-            opacity: 0.5;
-        }
-
-        .hidden {
-            display: none;
-        }
-
-        /* Favorites specific styles */
-        .favorites-count {
-            background: var(--accent-green);
-            color: white;
-            border-radius: 12px;
-            padding: 2px 8px;
-            font-size: 12px;
-            margin-left: 6px;
-        }
-
-        .remove-favorite {
-            background: var(--accent-red);
-            color: white;
-            border: none;
-            border-radius: 4px;
-            padding: 4px 8px;
-            cursor: pointer;
-            font-size: 12px;
-            margin-top: 8px;
-        }
-
-        .remove-favorite:hover {
-            background: #b91c1c;
-        }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <div class="header">
-            <h1>Movie Search App</h1>
-            <div style="display: flex; gap: 8px;">
-                <button id="clearCache" class="button" style="background: #6b46c1;">Clear Cache</button>
-                <button id="setApiKey" class="button" style="background: #b45309;">Set API Key</button>
-            </div>
-        </div>
-
-        <div class="tabs">
-            <button id="searchTab" class="tab active">Search Movies</button>
-            <button id="favoritesTab" class="tab">My Favorites <span id="favoritesCount" class="favorites-count">0</span></button>
-        </div>
-
-        <div class="card">
-            <!-- Search Tab Content -->
-            <div id="searchContent">
-                <div id="apiKeyWarning" class="hidden" style="margin-bottom: 12px; padding: 10px; border-radius: 6px; background: #4b2a0f;">
-                    <strong>OMDb API key missing.</strong>
-                    <div style="margin-top: 6px; font-size: 13px;">Click "Set API Key" to enter one, or set localStorage key "OMDB_API_KEY".</div>
-                </div>
-
-                <label style="display: block; margin-bottom: 8px; color: #98a6b3;">Search movies</label>
-                <div style="display: flex; gap: 8px;">
-                    <input
-                        id="searchInput"
-                        class="input"
-                        placeholder="Type movie title..."
-                    />
-                    <button id="searchButton" class="button">Search</button>
-                </div>
-
-                <div style="margin-top: 12px;">
-                    <div id="errorContainer" class="hidden" style="padding: 10px; border-radius: 6px; background: #420000;"></div>
-                    <div id="loadingContainer" class="hidden" style="padding: 10px; border-radius: 6px; background: #102027;">Loading...</div>
-                    <div id="noResultsContainer" class="hidden" style="padding: 10px; border-radius: 6px; background: #102027;">No results found.</div>
-
-                    <ul id="resultsList" class="list"></ul>
-
-                    <div id="sentinel" style="height: 1px;"></div>
-
-                    <div style="margin-top: 12px; display: flex; justify-content: space-between; align-items: center;">
-                        <div class="small">Page: <span id="currentPage">1</span></div>
-                        <div style="display: flex; gap: 8px;">
-                            <button id="prevButton" class="button" disabled>Prev</button>
-                            <button id="nextButton" class="button" disabled>Next</button>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="footer">
-                    Tips: Click on movie poster or title to view details.
-                </div>
-            </div>
-
-            <!-- Favorites Tab Content -->
-            <div id="favoritesContent" class="hidden">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
-                    <h3 style="color: var(--text-primary);">My Favorite Movies</h3>
-                    <button id="clearFavorites" class="button" style="background: var(--accent-red);">Clear All Favorites</button>
-                </div>
-                
-                <div id="favoritesList" class="list">
-                    <!-- Favorites will be populated here -->
-                </div>
-                
-                <div id="emptyFavorites" class="empty-state">
-                    <div class="empty-state-icon">★</div>
-                    <h3>No favorites yet</h3>
-                    <p>Start adding movies to your favorites by clicking the star icon on any movie</p>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div id="modalOverlay" class="modal-overlay hidden">
-        <div class="modal">
-            <div class="modal-header">
-                <h2 class="modal-title" id="modalTitle">Movie Title</h2>
-                <button class="close-button" id="closeModal">×</button>
-            </div>
-            
-            <div class="modal-body" id="modalBody">
-                <!-- Movie details will be inserted here -->
-            </div>
-        </div>
-    </div>
-
-    <script>
-        // --- CONSTANTS ---
-        const DEBOUNCE_MS = 350;
-        const PAGE_SIZE = 10;
-
-        // --- STATE ---
-        let state = {
-            apiKey: null,
-            query: '',
-            debouncedQuery: '',
-            results: [],
-            page: 1,
-            hasMore: false,
-            loading: false,
-            error: null,
-            favorites: {},
-            selectedMovie: null,
-            debounceTimer: null,
-            abortController: null,
-            currentTab: 'search'
-        };
-
-        // --- CACHE ---
-        const responseCache = new Map();
-
-        // --- DOM ELEMENTS ---
-        const elements = {
-            // Tabs
-            searchTab: document.getElementById('searchTab'),
-            favoritesTab: document.getElementById('favoritesTab'),
-            searchContent: document.getElementById('searchContent'),
-            favoritesContent: document.getElementById('favoritesContent'),
-            favoritesCount: document.getElementById('favoritesCount'),
-            
-            // Search elements
-            apiKeyWarning: document.getElementById('apiKeyWarning'),
-            searchInput: document.getElementById('searchInput'),
-            searchButton: document.getElementById('searchButton'),
-            errorContainer: document.getElementById('errorContainer'),
-            loadingContainer: document.getElementById('loadingContainer'),
-            noResultsContainer: document.getElementById('noResultsContainer'),
-            resultsList: document.getElementById('resultsList'),
-            currentPage: document.getElementById('currentPage'),
-            prevButton: document.getElementById('prevButton'),
-            nextButton: document.getElementById('nextButton'),
-            
-            // Favorites elements
-            favoritesList: document.getElementById('favoritesList'),
-            emptyFavorites: document.getElementById('emptyFavorites'),
-            clearFavorites: document.getElementById('clearFavorites'),
-            
-            // Modal elements
-            modalOverlay: document.getElementById('modalOverlay'),
-            modalTitle: document.getElementById('modalTitle'),
-            modalBody: document.getElementById('modalBody'),
-            closeModal: document.getElementById('closeModal'),
-            
-            // Buttons
-            clearCache: document.getElementById('clearCache'),
-            setApiKey: document.getElementById('setApiKey')
-        };
-
-        // --- INITIALIZATION ---
-        document.addEventListener('DOMContentLoaded', () => {
-            // Load API key from localStorage
-            state.apiKey = localStorage.getItem('OMDB_API_KEY');
-            updateApiKeyWarning();
-            
-            // Load favorites from localStorage
-            loadFavorites();
-            
-            // Set up event listeners
-            setupEventListeners();
-            
-            // Set up intersection observer for infinite scroll
-            setupIntersectionObserver();
-            
-            // Update UI
-            updateUI();
-        });
-
-        // --- EVENT LISTENERS ---
-        function setupEventListeners() {
-            // Tab switching
-            elements.searchTab.addEventListener('click', () => switchTab('search'));
-            elements.favoritesTab.addEventListener('click', () => switchTab('favorites'));
-            
-            // Search functionality
-            elements.searchInput.addEventListener('input', (e) => {
-                state.query = e.target.value;
-                debounceSearch();
-            });
-            
-            elements.searchButton.addEventListener('click', () => {
-                state.query = state.query.trim();
-                performSearch();
-            });
-            
-            elements.prevButton.addEventListener('click', () => {
-                if (state.page > 1) {
-                    goToPage(state.page - 1);
-                }
-            });
-            
-            elements.nextButton.addEventListener('click', () => {
-                if (state.hasMore) {
-                    goToPage(state.page + 1);
-                }
-            });
-            
-            // Modal
-            elements.closeModal.addEventListener('click', closeModal);
-            
-            elements.modalOverlay.addEventListener('click', (e) => {
-                if (e.target === elements.modalOverlay) {
-                    closeModal();
-                }
-            });
-            
-            // Actions
-            elements.clearCache.addEventListener('click', () => {
-                responseCache.clear();
-                alert('Cache cleared');
-            });
-            
-            elements.setApiKey.addEventListener('click', handleSetApiKey);
-            
-            elements.clearFavorites.addEventListener('click', clearAllFavorites);
-        }
-
-        function setupIntersectionObserver() {
-            const observer = new IntersectionObserver(
-                (entries) => {
-                    if (entries[0].isIntersecting && state.hasMore && !state.loading) {
-                        goToPage(state.page + 1);
-                    }
-                },
-                { rootMargin: '200px' }
-            );
-            
-            observer.observe(elements.sentinel);
-        }
-
-        // --- TAB MANAGEMENT ---
-        function switchTab(tabName) {
-            state.currentTab = tabName;
-            
-            // Update tab buttons
-            elements.searchTab.classList.toggle('active', tabName === 'search');
-            elements.favoritesTab.classList.toggle('active', tabName === 'favorites');
-            
-            // Update content visibility
-            elements.searchContent.classList.toggle('hidden', tabName !== 'search');
-            elements.favoritesContent.classList.toggle('hidden', tabName !== 'favorites');
-            
-            // If switching to favorites, update the favorites list
-            if (tabName === 'favorites') {
-                renderFavoritesList();
-            }
-        }
-
-        // --- FAVORITES MANAGEMENT ---
-        function loadFavorites() {
-            try {
-                const raw = localStorage.getItem('movie_favs_v1');
-                state.favorites = raw ? JSON.parse(raw) : {};
-                updateFavoritesCount();
-            } catch (e) {
-                state.favorites = {};
-            }
-        }
-
-        function saveFavorites() {
-            try {
-                localStorage.setItem('movie_favs_v1', JSON.stringify(state.favorites));
-                updateFavoritesCount();
-            } catch (e) {
-                console.warn('Could not save favorites', e);
-            }
-        }
-
-        function updateFavoritesCount() {
-            const count = Object.keys(state.favorites).length;
-            elements.favoritesCount.textContent = count;
-        }
-
-        function toggleFavorite(item, e) {
-            if (e) e.stopPropagation();
-            
-            if (state.favorites[item.imdbID]) {
-                delete state.favorites[item.imdbID];
-            } else {
-                state.favorites[item.imdbID] = item;
-            }
-            
-            saveFavorites();
-            updateUI();
-            
-            // If we're on the favorites tab, update the list
-            if (state.currentTab === 'favorites') {
-                renderFavoritesList();
-            }
-        }
-
-        function removeFavorite(imdbID, e) {
-            if (e) e.stopPropagation();
-            
-            delete state.favorites[imdbID];
-            saveFavorites();
-            renderFavoritesList();
-        }
-
-        function clearAllFavorites() {
-            if (Object.keys(state.favorites).length === 0) return;
-            
-            if (confirm('Are you sure you want to remove all favorites?')) {
-                state.favorites = {};
-                saveFavorites();
-                renderFavoritesList();
-            }
-        }
-
-        function renderFavoritesList() {
-            const favorites = Object.values(state.favorites);
-            
-            if (favorites.length === 0) {
-                elements.favoritesList.classList.add('hidden');
-                elements.emptyFavorites.classList.remove('hidden');
-                return;
-            }
-            
-            elements.favoritesList.classList.remove('hidden');
-            elements.emptyFavorites.classList.add('hidden');
-            
-            elements.favoritesList.innerHTML = favorites.map(movie => `
-                <li class="item">
-                    <img
-                        src="${movie.Poster === 'N/A' ? 'https://via.placeholder.com/80x120?text=No+Image' : movie.Poster}"
-                        alt="${movie.Title}"
-                        class="poster"
-                        onclick="openMovieDetails(${JSON.stringify(movie).replace(/"/g, '&quot;')})"
-                    />
-                    <div style="flex: 1;">
-                        <div style="display: flex; justify-content: space-between; align-items: flex-start;">
-                            <div>
-                                <div 
-                                    style="font-weight: 600; cursor: pointer; color: #60a5fa;" 
-                                    onclick="openMovieDetails(${JSON.stringify(movie).replace(/"/g, '&quot;')})"
-                                >
-                                    ${movie.Title}
-                                </div>
-                                <div class="small">${movie.Year} • ${movie.Type}</div>
-                            </div>
-                            <div>
-                                <button
-                                    onclick="toggleFavorite(${JSON.stringify(movie).replace(/"/g, '&quot;')}, event)"
-                                    aria-pressed="true"
-                                    style="background: transparent; border: 1px solid #334155; padding: 4px 8px; border-radius: 6px; color: #f59e0b; cursor: pointer;"
-                                >
-                                    ★
-                                </button>
-                            </div>
-                        </div>
-                        <div style="margin-top: 8px; font-size: 12px; color: #91a6b3;">IMDB ID: ${movie.imdbID}</div>
-                        <button
-                            onclick="openMovieDetails(${JSON.stringify(movie).replace(/"/g, '&quot;')})"
-                            style="margin-top: 8px; padding: 4px 8px; font-size: 12px; border-radius: 6px; background: #374151; color: #fff; border: none; cursor: pointer; margin-right: 8px;"
-                        >
-                            View Details
-                        </button>
-                        <button
-                            onclick="removeFavorite('${movie.imdbID}', event)"
-                            class="remove-favorite"
-                        >
-                            Remove
-                        </button>
-                    </div>
-                </li>
-            `).join('');
-        }
-
-        // --- DEBOUNCE ---
-        function debounceSearch() {
-            if (state.debounceTimer) {
-                clearTimeout(state.debounceTimer);
-            }
-            
-            state.debounceTimer = setTimeout(() => {
-                state.debouncedQuery = state.query;
-                performSearch();
-            }, DEBOUNCE_MS);
-        }
-
-        // --- API KEY MANAGEMENT ---
-        function updateApiKeyWarning() {
-            if (!state.apiKey) {
-                elements.apiKeyWarning.classList.remove('hidden');
-                elements.searchInput.disabled = true;
-                elements.searchButton.disabled = true;
-            } else {
-                elements.apiKeyWarning.classList.add('hidden');
-                elements.searchInput.disabled = false;
-                elements.searchButton.disabled = false;
-            }
-        }
-
-        function handleSetApiKey() {
-            const k = prompt('Enter OMDb API key (stored in localStorage for convenience):', state.apiKey || '');
-            if (k) {
-                try {
-                    localStorage.setItem('OMDB_API_KEY', k);
-                    state.apiKey = k;
-                    updateApiKeyWarning();
-                } catch (e) {
-                    alert('Failed to save API key');
-                }
-            }
-        }
-
-        // --- FETCH UTILITIES ---
-        async function fetchWithBackoff(url, options = {}, { retries = 4, baseDelay = 500 } = {}) {
-            let attempt = 0;
-            while (true) {
-                try {
-                    const res = await fetch(url, options);
-                    if (options && options.signal && options.signal.aborted) {
-                        const e = new Error('Aborted');
-                        e.name = 'AbortError';
-                        throw e;
-                    }
-                    if (res.status === 429) {
-                        if (attempt >= retries) throw new Error('Rate limit: retries exhausted (429)');
-                        const jitter = Math.random() * 300;
-                        const delay = baseDelay * Math.pow(2, attempt) + jitter;
-                        await new Promise((r) => setTimeout(r, delay));
-                        attempt++;
-                        continue;
-                    }
-                    if (!res.ok) {
-                        const text = await res.text().catch(() => '');
-                        throw new Error(`Network error: ${res.status} ${res.statusText} ${text}`);
-                    }
-                    return res;
-                } catch (err) {
-                    if (err && err.name === 'AbortError') throw err;
-                    if (attempt >= retries) throw err;
-                    const jitter = Math.random() * 300;
-                    const delay = baseDelay * Math.pow(2, attempt) + jitter;
-                    await new Promise((r) => setTimeout(r, delay));
-                    attempt++;
-                }
-            }
-        }
-
-        function buildSearchUrl(q, pageNum) {
-            const key = state.apiKey || '';
-            const params = new URLSearchParams({
-                apikey: key,
-                s: q,
-                page: String(pageNum),
-                type: 'movie',
-            });
-            return `https://www.omdbapi.com/?${params.toString()}`;
-        }
-
-        async function fetchPage(q, pageNum, { signal } = {}) {
-            if (!q) return { Search: [], totalResults: 0 };
-            if (!state.apiKey) throw new Error('Missing OMDb API key. Use Set API Key to provide one.');
-            
-            const url = buildSearchUrl(q, pageNum);
-            const cacheKey = `${q}|${pageNum}`;
-            
-            if (responseCache.has(cacheKey)) {
-                return responseCache.get(cacheKey);
-            }
-            
-            const res = await fetchWithBackoff(url, { signal }, { retries: 3, baseDelay: 300 });
-            const json = await res.json();
-            responseCache.set(cacheKey, json);
-            return json;
-        }
-
-        // --- SEARCH LOGIC ---
-        async function performSearch() {
-            if (state.abortController) {
-                state.abortController.abort();
-            }
-            
-            state.abortController = new AbortController();
-            
-            if (!state.debouncedQuery) {
-                state.results = [];
-                state.page = 1;
-                state.hasMore = false;
-                state.error = null;
-                updateUI();
-                return;
-            }
-            
-            state.loading = true;
-            state.error = null;
-            updateUI();
-            
-            try {
-                const json = await fetchPage(state.debouncedQuery, 1, { signal: state.abortController.signal });
-                
-                if (json.Response === 'False') {
-                    state.results = [];
-                    state.hasMore = false;
-                    state.error = json.Error || 'No results';
-                } else {
-                    state.results = json.Search || [];
-                    const total = Number(json.totalResults || 0);
-                    state.hasMore = total > PAGE_SIZE;
-                    state.page = 1;
-                }
-            } catch (err) {
-                if (err && err.name === 'AbortError') return;
-                console.error(err);
-                state.error = err.message || 'Unknown error';
-                state.results = [];
-                state.hasMore = false;
-            } finally {
-                state.loading = false;
-                updateUI();
-            }
-        }
-
-        async function goToPage(p) {
-            if (!state.debouncedQuery) return;
-            
-            if (state.abortController) {
-                state.abortController.abort();
-            }
-            
-            state.abortController = new AbortController();
-            state.loading = true;
-            state.error = null;
-            updateUI();
-            
-            try {
-                const json = await fetchPage(state.debouncedQuery, p, { signal: state.abortController.signal });
-                
-                if (json.Response === 'False') {
-                    state.results = [];
-                    state.hasMore = false;
-                    state.error = json.Error || 'No results';
-                } else {
-                    if (p === 1) {
-                        state.results = json.Search || [];
-                    } else {
-                        state.results = [...state.results, ...(json.Search || [])];
-                    }
-                    
-                    const total = Number(json.totalResults || 0);
-                    state.hasMore = state.results.length < total;
-                    state.page = p;
-                }
-            } catch (err) {
-                if (err && err.name === 'AbortError') return;
-                state.error = err.message || 'Unknown error';
-            } finally {
-                state.loading = false;
-                updateUI();
-            }
-        }
-
-        // --- MODAL ---
-        async function openMovieDetails(movie) {
-            state.selectedMovie = movie;
-            elements.modalTitle.textContent = movie.Title;
-            elements.modalBody.innerHTML = '<div class="loading-text">Loading details...</div>';
-            elements.modalOverlay.classList.remove('hidden');
-            document.body.style.overflow = 'hidden';
-            
-            await fetchMovieDetails(movie);
-        }
-
-        function closeModal() {
-            state.selectedMovie = null;
-            elements.modalOverlay.classList.add('hidden');
-            document.body.style.overflow = 'unset';
-            // Clear iframe content to stop audio
-            elements.modalBody.innerHTML = '';
-        }
-
-        async function fetchMovieDetails(movie) {
-            if (!movie || !state.apiKey) return;
-            
-            try {
-                const detailsResponse = await fetchWithBackoff(
-                    `https://www.omdbapi.com/?apikey=${state.apiKey}&i=${movie.imdbID}&plot=full`
-                );
-                const data = await detailsResponse.json();
-                
-                if (data.Response === 'True') {
-                    renderMovieDetails(data);
-                } else {
-                    elements.modalBody.innerHTML = `<div class="error-text">Error: ${data.Error || 'Failed to load movie details'}</div>`;
-                }
-            } catch (err) {
-                elements.modalBody.innerHTML = `<div class="error-text">Error: ${err.message || 'Failed to fetch movie details'}</div>`;
-            }
-        }
-
-        function renderMovieDetails(details) {
-            const renderRatings = () => {
-                if (!details.Ratings || details.Ratings.length === 0) {
-                    return '<div class="detail-text">No ratings available</div>';
-                }
-                
-                return details.Ratings.map((rating, index) => `
-                    <div class="rating-item">
-                        <span class="rating-source">${rating.Source}</span>
-                        <span class="rating-value">${rating.Value}</span>
-                    </div>
-                `).join('');
-            };
-
-            // --- YOUTUBE SEARCH LOGIC ---
-            // 1. We construct the search query.
-            // 2. We use the 'youtube-nocookie' domain which is often less strict about blocking errors.
-            // 3. IMPORTANT: We provide a FALLBACK button. If the video player shows "Error", the user 
-            //    can click the button to open the YouTube Search Results Page directly.
-            const rawQuery = `${details.Title} ${details.Year} trailer`;
-            const trailerQuery = encodeURIComponent(rawQuery);
-            const embedSrc = `https://www.youtube-nocookie.com/embed?listType=search&list=${trailerQuery}`;
-            const searchLink = `https://www.youtube.com/results?search_query=${trailerQuery}`;
-
-            // Create the modal content with embedded player + Fallback Button
-            elements.modalBody.innerHTML = `
-                <div class="movie-header">
-                    <img
-                        src="${details.Poster === 'N/A' ? 'https://via.placeholder.com/200x300?text=No+Image' : details.Poster}"
-                        alt="${details.Title}"
-                        class="detail-poster"
-                    />
-                    <div class="movie-basic-info">
-                        <div class="meta-info">
-                            <span class="meta-item">${details.Rated}</span>
-                            <span class="meta-item">${details.Runtime}</span>
-                            <span class="meta-item">${details.Genre}</span>
-                        </div>
-                        ${details.imdbRating && details.imdbRating !== 'N/A' ? 
-                            `<div class="rating-badge">IMDb: ${details.imdbRating}/10</div>` : ''}
-                        <div class="quick-stats">
-                            <div class="stat-item"><strong class="strong">Year:</strong> ${details.Year}</div>
-                            <div class="stat-item"><strong class="strong">Director:</strong> ${details.Director}</div>
-                            <div class="stat-item"><strong class="strong">Cast:</strong> ${details.Actors}</div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- EMBEDDED TRAILER & FALLBACK -->
-                <div class="section">
-                    <h3 class="section-title">Trailer</h3>
-                    <div class="trailer-section">
-                        <div class="youtube-container">
-                            <iframe 
-                                width="100%" 
-                                height="100%" 
-                                src="${embedSrc}" 
-                                frameborder="0" 
-                                allow="encrypted-media; picture-in-picture" 
-                                allowfullscreen
-                                style="border: none;"
-                            ></iframe>
-                        </div>
-                        <p class="detail-text" style="font-size: 13px; color: #9aa7b2;">
-                            Attempting to play results for: "${rawQuery}"
-                        </p>
-                        
-                        <!-- THE FIX: Direct link to search results if player fails -->
-                        <a href="${searchLink}" target="_blank" class="fallback-button">
-                            <span style="font-size: 18px;">▶</span>
-                            Video error? Click to watch on YouTube
-                        </a>
-                    </div>
-                </div>
-
-                <!-- Plot -->
-                <div class="section">
-                    <h3 class="section-title">Plot</h3>
-                    <p class="detail-text">${details.Plot || 'No plot available'}</p>
-                </div>
-
-                <!-- Ratings -->
-                <div class="section">
-                    <h3 class="section-title">Ratings</h3>
-                    <div class="ratings-section">
-                        ${renderRatings()}
-                        ${details.imdbVotes && details.imdbVotes !== 'N/A' ? `
-                            <div class="rating-item">
-                                <span class="rating-source">IMDb Votes</span>
-                                <span class="rating-value">${details.imdbVotes}</span>
-                            </div>
-                        ` : ''}
-                    </div>
-                </div>
-
-                <!-- Details -->
-                <div class="section">
-                    <h3 class="section-title">Details</h3>
-                    <div class="details-grid">
-                        <div class="detail-grid-item">
-                            <strong style="display:block; color:#94a3b8; margin-bottom:4px;">Writer</strong> 
-                            ${details.Writer || 'N/A'}
-                        </div>
-                        <div class="detail-grid-item">
-                            <strong style="display:block; color:#94a3b8; margin-bottom:4px;">Awards</strong> 
-                            ${details.Awards || 'N/A'}
-                        </div>
-                        <div class="detail-grid-item">
-                            <strong style="display:block; color:#94a3b8; margin-bottom:4px;">Box Office</strong> 
-                            ${details.BoxOffice || 'N/A'}
-                        </div>
-                    </div>
-                </div>
-            `;
-        }
-
-        // --- UI UPDATES ---
-        function updateUI() {
-            // Update error display
-            if (state.error) {
-                elements.errorContainer.textContent = `Error: ${String(state.error)}`;
-                elements.errorContainer.classList.remove('hidden');
-            } else {
-                elements.errorContainer.classList.add('hidden');
-            }
-            
-            // Update loading display
-            if (state.loading) {
-                elements.loadingContainer.classList.remove('hidden');
-            } else {
-                elements.loadingContainer.classList.add('hidden');
-            }
-            
-            // Update no results display
-            if (!state.error && !state.loading && state.results.length === 0 && state.debouncedQuery) {
-                elements.noResultsContainer.classList.remove('hidden');
-            } else {
-                elements.noResultsContainer.classList.add('hidden');
-            }
-            
-            // Update results list
-            elements.resultsList.innerHTML = state.results.map(movie => `
-                <li class="item">
-                    <img
-                        src="${movie.Poster === 'N/A' ? 'https://via.placeholder.com/80x120?text=No+Image' : movie.Poster}"
-                        alt="${movie.Title}"
-                        class="poster"
-                        onclick="openMovieDetails(${JSON.stringify(movie).replace(/"/g, '&quot;')})"
-                    />
-                    <div style="flex: 1;">
-                        <div style="display: flex; justify-content: space-between; align-items: flex-start;">
-                            <div>
-                                <div 
-                                    style="font-weight: 600; cursor: pointer; color: #60a5fa;" 
-                                    onclick="openMovieDetails(${JSON.stringify(movie).replace(/"/g, '&quot;')})"
-                                >
-                                    ${movie.Title}
-                                </div>
-                                <div class="small">${movie.Year} • ${movie.Type}</div>
-                            </div>
-                            <div>
-                                <button
-                                    onclick="toggleFavorite(${JSON.stringify(movie).replace(/"/g, '&quot;')}, event)"
-                                    aria-pressed="${!!state.favorites[movie.imdbID]}"
-                                    style="background: transparent; border: 1px solid #334155; padding: 4px 8px; border-radius: 6px; color: ${state.favorites[movie.imdbID] ? '#f59e0b' : '#fff'}; cursor: pointer;"
-                                >
-                                    ${state.favorites[movie.imdbID] ? '★' : '☆'}
-                                </button>
-                            </div>
-                        </div>
-                        <div style="margin-top: 8px; font-size: 12px; color: #91a6b3;">IMDB ID: ${movie.imdbID}</div>
-                        <button
-                            onclick="openMovieDetails(${JSON.stringify(movie).replace(/"/g, '&quot;')})"
-                            style="margin-top: 8px; padding: 4px 8px; font-size: 12px; border-radius: 6px; background: #374151; color: #fff; border: none; cursor: pointer;"
-                        >
-                            View Details
-                        </button>
-                    </div>
-                </li>
-            `).join('');
-            
-            // Update pagination
-            elements.currentPage.textContent = state.page;
-            elements.prevButton.disabled = state.page === 1;
-            elements.nextButton.disabled = !state.hasMore;
-        }
-
-        // Make functions available globally for onclick handlers
-        window.openMovieDetails = openMovieDetails;
-        window.toggleFavorite = toggleFavorite;
-        window.removeFavorite = removeFavorite;
-    </script>
-</body>
-</html>
+    <meta name="description" content="Search movies, view details, and save favorites with OMDb API">
+    <meta name="author" content="Lovable">
+
+    <!-- TODO: Update og:title to match your application name -->
+    
+    
+    <meta property="og:type" content="website">
+    <meta property="og:image" content="images/id-preview-c1c28c71--95f8ff33-625c-4286-a48a-fe9d73cc6eee.lovable.app-1772527396639.png">
+
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:site" content="@Lovable">
+    <meta name="twitter:image" content="https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/ae78374c-1ca3-49c0-a201-c0c1d573b800/id-preview-c1c28c71--95f8ff33-625c-4286-a48a-fe9d73cc6eee.lovable.app-1772527396639.png">
+    <meta property="og:title" content="Movie Search App">
+  <meta name="twitter:title" content="Movie Search App">
+  <meta property="og:description" content="Search movies, view details, and save favorites with OMDb API">
+  <meta name="twitter:description" content="Search movies, view details, and save favorites with OMDb API">
+  <script type="module" crossorigin="" src="js/index-y6ITip8Q.js"></script>
+  <link rel="stylesheet" crossorigin="" href="css/index-BhQZQvY4.css">
+
+<style>
+	@font-face {
+		font-family: 'CameraPlainVariable';
+		src: url('fonts/CameraPlainVariable.woff2') format('woff2');
+		font-weight: 100 900;
+		font-style: normal;
+		font-display: swap;
+	}
+
+	#lovable-badge {
+		--badge-bg: #1b1b1b;
+		--badge-text: #c5c1b9;
+		--badge-text-hover: #dcdad5;
+		--badge-radius: 6px;
+		--badge-padding: 8px;
+		--badge-gap: 6px;
+		--badge-shadow: 
+			0 0 0 1px rgba(0, 0, 0, 0.88),
+			0 1px 0 0 rgba(0, 0, 0, 0.04),
+			0 2px 2px -1px rgba(0, 0, 0, 0.08),
+			0 4px 4px -2px rgba(0, 0, 0, 0.08),
+			0 8px 8px -4px rgba(0, 0, 0, 0.08),
+			0 16px 16px -8px rgba(0, 0, 0, 0.08);
+		--badge-transition-duration: 0.2s;
+		--badge-transition-easing: cubic-bezier(0.16, 1, 0.32, 1);
+		--focus-color: #575ECF;
+		--focus-offset: 2px;
+		--focus-width: 2px;
+		
+		position: fixed;
+		bottom: 12px;
+		right: 12px;
+		height: 24px;
+		display: flex;
+		align-items: center;
+		z-index: 1000000;
+		background-color: var(--badge-bg);
+		color: var(--badge-text);
+		border-radius: var(--badge-radius);
+		box-shadow: var(--badge-shadow);
+		font-size: 12px;
+		font-family: CameraPlainVariable, "CameraPlainVariable Fallback", -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+		font-weight: 400 !important;
+		text-transform: none !important;
+		font-feature-settings: normal !important;
+		transform: translateZ(0);
+		will-change: transform, opacity;
+	}
+
+	#lovable-badge-cta {
+		display: flex;
+		align-items: center;
+		gap: var(--badge-gap);
+		padding: 0 var(--badge-padding);
+		height: 100%;
+		color: inherit;
+		text-decoration: none;
+		white-space: nowrap;
+		border-radius: var(--badge-radius) 0 0 var(--badge-radius);
+		transition: 
+			background-color var(--badge-transition-duration) ease,
+			color var(--badge-transition-duration) ease,
+			transform 0.1s ease;
+	}
+
+	#lovable-badge-cta:hover {
+		background: rgba(255, 255, 255, 0.04);
+		color: var(--badge-text-hover);
+	}
+
+	#lovable-badge-cta:active {
+		transform: scale(0.98);
+	}
+
+	#lovable-badge-cta:focus {
+		outline: none;
+	}
+
+	#lovable-badge-cta:focus-visible {
+		outline: var(--focus-width) solid var(--focus-color);
+		outline-offset: var(--focus-offset);
+		z-index: 1;
+	}
+
+	#lovable-badge-text {
+		line-height: 1;
+	}
+
+	#lovable-badge-divider {
+		width: 1px;
+		height: 24px;
+		background-color: rgba(255, 255, 255, 0.04);
+		flex-shrink: 0;
+	}
+
+	#lovable-badge-close {
+		width: 24px;
+		height: 24px;
+		min-width: 24px;
+		min-height: 24px;
+		cursor: pointer;
+		background: none;
+		border: none;
+		padding: 0;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		border-radius: 0 var(--badge-radius) var(--badge-radius) 0;
+		flex-shrink: 0;
+		transition: 
+			background-color var(--badge-transition-duration) ease,
+			transform 0.1s ease;
+	}
+
+	#lovable-badge-close:hover {
+		background: rgba(255, 255, 255, 0.04);
+	}
+
+	#lovable-badge-close:active {
+		transform: scale(0.92);
+	}
+
+	#lovable-badge-close:focus {
+		outline: none;
+	}
+
+	#lovable-badge-close:focus-visible {
+		outline: var(--focus-width) solid var(--focus-color);
+		outline-offset: calc(var(--focus-offset) * -1);
+		z-index: 1;
+	}
+
+	#lovable-badge-close svg path {
+		fill: var(--badge-text);
+		transition: fill var(--badge-transition-duration) ease;
+	}
+
+	#lovable-badge-close:hover svg path {
+		fill: var(--badge-text-hover);
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		#lovable-badge-cta,
+		#lovable-badge-close,
+		#lovable-badge-close svg path {
+			transition: none;
+		}
+		
+		#lovable-badge-cta:active,
+		#lovable-badge-close:active {
+			transform: none;
+		}
+	}
+
+	@media (prefers-contrast: high) {
+		#lovable-badge {
+			--badge-bg: #000;
+			--badge-text: #fff;
+			--badge-text-hover: #fff;
+			border: 2px solid currentColor;
+		}
+		
+		#lovable-badge-cta:focus-visible,
+		#lovable-badge-close:focus-visible {
+			outline-width: 3px;
+		}
+	}
+</style>
+<script defer="" src="js/~flock.js" data-proxy-url="https://moviesearch177.lovable.app/~api/analytics"></script></head>
+
+  <body>
+    <div id="root"></div>
+  
+<aside id="lovable-badge" role="complementary" dir="ltr" lang="en" aria-label="Edit with Lovable">
+	<a id="lovable-badge-cta" target="_blank" href="https://lovable.dev/projects/95f8ff33-625c-4286-a48a-fe9d73cc6eee?utm_source=lovable-badge" rel="noopener" aria-label="Edit with Lovable">
+		<span id="lovable-badge-text">Edit with</span>
+		<svg xmlns="http://www.w3.org/2000/svg" width="52" height="16" fill="none" viewBox="0 0 52 16">
+  <path fill="#FCFBF8" fill-rule="evenodd" d="M20.318 5.25c.643 0 1.206.14 1.69.418a2.81 2.81 0 0 1 1.118 1.191c.266.513.4 1.115.4 1.807s-.134 1.296-.4 1.812a2.81 2.81 0 0 1-1.118 1.193c-.484.278-1.047.418-1.69.418s-1.208-.14-1.695-.418a2.85 2.85 0 0 1-1.125-1.193c-.262-.516-.393-1.12-.393-1.812s.131-1.294.393-1.807a2.848 2.848 0 0 1 1.125-1.191c.487-.279 1.052-.418 1.695-.418Zm0 1.425c-.27 0-.504.076-.7.228-.193.147-.34.37-.443.67-.102.295-.153.66-.153 1.093 0 .435.05.801.153 1.1.102.3.25.524.443.676.196.147.43.22.7.22.27 0 .502-.073.694-.22.193-.152.341-.375.443-.67.103-.299.153-.667.153-1.106 0-.65-.112-1.145-.337-1.481a1.08 1.08 0 0 0-.953-.51ZM32.7 5.25c.61 0 1.127.1 1.549.3.422.197.74.48.953.849.217.368.325.809.325 1.32v2.704c0 .29.02.562.062.812.044.245.108.4.19.466V12h-1.935a5.895 5.895 0 0 1-.105-.684 7.745 7.745 0 0 1-.02-.228 2.293 2.293 0 0 1-.151.203c-.205.242-.47.437-.793.584-.32.143-.685.215-1.094.215-.406 0-.77-.08-1.094-.24a1.845 1.845 0 0 1-.756-.682 1.984 1.984 0 0 1-.27-1.045c0-.606.178-1.069.535-1.388.356-.324.87-.534 1.542-.633l1.125-.16c.225-.032.403-.074.534-.123a.622.622 0 0 0 .288-.196.549.549 0 0 0 .093-.327.65.65 0 0 0-.11-.367.702.702 0 0 0-.32-.27c-.14-.07-.31-.105-.51-.105-.32 0-.576.083-.768.251-.193.164-.298.39-.314.676h-1.923c.016-.434.147-.82.393-1.155.25-.34.596-.604 1.039-.792.442-.189.954-.283 1.535-.283Zm.99 3.498a.98.98 0 0 1-.215.14 2.49 2.49 0 0 1-.584.178l-.473.092c-.315.061-.553.156-.713.283-.155.127-.233.305-.233.534 0 .23.084.412.252.547.168.135.383.203.645.203s.494-.058.694-.173c.201-.118.355-.282.461-.49.11-.21.166-.448.166-.714v-.6Zm4.526-2.375c.065-.125.138-.243.221-.349.197-.25.437-.44.719-.571.282-.135.6-.203.952-.203.528 0 .988.138 1.377.412.389.275.688.67.896 1.186.21.512.314 1.12.314 1.824 0 .7-.107 1.309-.32 1.825-.213.512-.518.906-.915 1.18-.393.275-.854.412-1.383.412-.352 0-.667-.062-.946-.184a1.832 1.832 0 0 1-.7-.554 2.2 2.2 0 0 1-.234-.383V12h-1.843V3h1.862v3.373Zm1.284.296c-.274 0-.51.085-.707.253-.192.163-.338.397-.436.7a3.376 3.376 0 0 0-.148 1.05c0 .406.05.759.148 1.058.098.299.243.53.436.694.197.164.433.246.707.246.279 0 .512-.082.7-.246.193-.164.336-.395.43-.694.099-.3.148-.652.148-1.058 0-.405-.05-.757-.147-1.056-.095-.299-.238-.53-.43-.694a1.015 1.015 0 0 0-.7-.253Zm9.416-1.419c.602 0 1.136.131 1.604.393.466.262.829.643 1.086 1.143.263.5.394 1.097.394 1.794 0 .25-.002.449-.006.596H47.51c.018.288.071.538.164.75a1.3 1.3 0 0 0 .491.596c.214.13.465.196.757.196.319 0 .583-.082.792-.246.209-.167.34-.403.393-.706h1.862a2.48 2.48 0 0 1-.485 1.235 2.54 2.54 0 0 1-1.051.805c-.439.188-.949.283-1.53.283-.655 0-1.225-.125-1.708-.375a2.672 2.672 0 0 1-1.13-1.143c-.267-.508-.4-1.137-.4-1.887 0-.712.14-1.327.418-1.843a2.86 2.86 0 0 1 1.155-1.186c.491-.27 1.051-.405 1.678-.405Zm-.044 1.345c-.274 0-.516.068-.725.203a1.29 1.29 0 0 0-.479.59 2.045 2.045 0 0 0-.132.498h2.562a1.873 1.873 0 0 0-.138-.602 1.061 1.061 0 0 0-.418-.516 1.243 1.243 0 0 0-.67-.173Z" clip-rule="evenodd"></path>
+  <path fill="#FCFBF8" d="m26.605 9.995 1.342-4.566h1.924L27.628 12h-2.07l-2.33-6.57h1.98l1.397 4.565Zm-13.013.143h2.256c1.632 0 1.421 1.837 1.418 1.861h-5.603V3h1.93v7.138Zm31.516 1.861h-1.862V3h1.862v8.999Z"></path>
+  <path fill="url(#a)" fill-rule="evenodd" d="M2.7 3c1.492 0 2.7 1.192 2.7 2.663v1.012h.9c1.49 0 2.7 1.192 2.7 2.662S7.791 12 6.3 12H0V5.663C0 4.193 1.209 3 2.7 3Z" clip-rule="evenodd"></path>
+  <defs>
+    <radialGradient id="a" cx="0" cy="0" r="1" gradientTransform="matrix(-1.54236 7.07838 -10.231 -2.15602 4.627 5.022)" gradientUnits="userSpaceOnUse">
+      <stop offset=".106" stop-color="#FE7B02"></stop>
+      <stop offset=".394" stop-color="#FE3F21"></stop>
+      <stop offset=".608" stop-color="#F858BC"></stop>
+      <stop offset=".929" stop-color="#575ECF"></stop>
+    </radialGradient>
+  </defs>
+</svg>
+
+
+	</a>
+	
+	<span id="lovable-badge-divider" aria-hidden="true"></span>
+	
+	<button id="lovable-badge-close" aria-label="Dismiss" title="Dismiss" type="button">
+		<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 16 16" aria-hidden="true">
+			<path d="M10.646 4.646a.5.5 0 1 1 .707.708L8.707 8l2.646 2.646a.5.5 0 1 1-.707.707L8 8.707l-2.646 2.646a.5.5 0 1 1-.708-.707L7.293 8 4.646 5.354a.5.5 0 1 1 .708-.708L8 7.293l2.646-2.647Z"></path>
+		</svg>
+	</button>
+</aside>
+<script>
+	// Don't show the lovable-badge if the page is in an iframe or if it's being rendered by puppeteer (screenshot service)
+	if (window.self !== window.top || navigator.userAgent.includes('puppeteer')) {
+		// the page is in an iframe
+		var badge = document.getElementById('lovable-badge');
+		if (badge) {
+			badge.style.display = 'none';
+		}
+	}
+
+	// Add click event listener to close button with animation
+	var closeButton = document.getElementById('lovable-badge-close');
+	if (closeButton) {
+		closeButton.addEventListener('click', function(event) {
+			event.preventDefault();
+			event.stopPropagation();
+			var badge = document.getElementById('lovable-badge');
+			if (badge) {
+				badge.classList.add('closing');
+				setTimeout(function() {
+					if (badge) {
+						badge.style.display = 'none';
+					}
+				}, 240);
+			}
+		});
+	}
+</script>
+
+
+</body></html>
